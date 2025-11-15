@@ -46,6 +46,50 @@
 - CLI interface for 17 commands
 - MCP server integration (29 tools)
 
+### Supabase Integration (Agentic-Flow)
+
+**Important Discovery:** While AgentDB itself is SQLite-only, **agentic-flow** (the parent package) includes **Supabase integration** for distributed/cloud deployments:
+
+**Location:** `agentic-flow/dist/federation/integrations/supabase-adapter.js`
+
+**Features:**
+```typescript
+interface SupabaseConfig {
+  url: string;
+  anonKey: string;
+  serviceRoleKey?: string;
+  vectorBackend?: 'pgvector' | 'agentdb' | 'hybrid';  // ← Key option!
+  syncInterval?: number;
+}
+```
+
+**What it provides:**
+- ✅ **PostgreSQL backend** via Supabase for distributed memory
+- ✅ **pgvector extension** for native PostgreSQL vector search
+- ✅ **Hybrid mode** - can use AgentDB (SQLite) + Supabase together
+- ✅ **Real-time subscriptions** for multi-agent coordination
+- ✅ **Session management** for agent state tracking
+- ✅ **Semantic search** using Supabase's pgvector
+- ✅ **Cleanup utilities** for expired memories
+
+**Tables created:**
+- `agent_sessions` - Active agent sessions
+- `agent_memories` - Distributed memory storage
+- `agent_tasks` - Task tracking
+- `agent_events` - Event logging
+
+**Usage modes:**
+1. **Local-only:** AgentDB with SQLite (default)
+2. **Cloud-only:** Supabase with pgvector
+3. **Hybrid:** Local AgentDB + cloud Supabase sync
+
+**Reality Check:**
+- ⚠️ Supabase is in **agentic-flow**, NOT in agentdb package
+- ⚠️ Requires Supabase account and configuration
+- ⚠️ Additional dependency: `@supabase/supabase-js`
+- ✅ Good for multi-agent systems needing shared state
+- ✅ Enables horizontal scaling beyond SQLite limits
+
 ### Component-by-Component Analysis
 
 #### 2.1 ReflexionMemory
@@ -567,16 +611,18 @@ agentdb recall with-certificate "successful API optimization" 5 0.7 0.2 0.1
 
 ## 7. Comparison with Alternatives
 
-| Feature | AgentDB | Mem0 | LangChain Memory | Pinecone |
-|---------|---------|------|------------------|----------|
-| **Storage** | SQLite | Vector DB | Various | Cloud Vector DB |
-| **Embeddings** | Local/Mock | Cloud API | Various | Cloud API |
-| **Scale** | < 100K | Millions | Depends | Billions |
-| **Causal Memory** | Basic | No | No | No |
-| **RL Integration** | Claimed | No | No | No |
-| **MCP Tools** | 29 | No | No | No |
-| **Self-Hosted** | ✅ | ❌ | ✅ | ❌ |
-| **Cost** | Free | Paid | Free | Paid |
+| Feature | AgentDB | AgentDB + Supabase | Mem0 | LangChain Memory | Pinecone |
+|---------|---------|---------------------|------|------------------|----------|
+| **Storage** | SQLite | PostgreSQL (pgvector) | Vector DB | Various | Cloud Vector DB |
+| **Embeddings** | Local/Mock | Local/Mock + PG | Cloud API | Various | Cloud API |
+| **Scale** | < 100K | Millions | Millions | Depends | Billions |
+| **Causal Memory** | Basic | Basic | No | No | No |
+| **RL Integration** | Claimed | Claimed | No | No | No |
+| **MCP Tools** | 29 | 29 | No | No | No |
+| **Self-Hosted** | ✅ | ✅/☁️ Hybrid | ❌ | ✅ | ❌ |
+| **Real-time Sync** | ❌ | ✅ | No | No | No |
+| **Multi-Agent** | Limited | ✅ | No | Depends | No |
+| **Cost** | Free | Free + Supabase | Paid | Free | Paid |
 
 ---
 
@@ -615,15 +661,18 @@ agentdb recall with-certificate "successful API optimization" 5 0.7 0.2 0.1
 - Semantic search over past experiences
 - MCP integration with Claude Code
 - Lightweight, self-hosted memory
+- **With Supabase:** Multi-agent coordination and cloud sync
 
 **Don't use it for:**
 - Real causal inference
 - Production reinforcement learning
-- Large-scale vector search
+- Large-scale vector search (unless using Supabase + pgvector)
 - Cryptographic provenance
 
 **Recommendation:**
-If you need a simple, local memory system for agent experimentation with good Claude Code integration, AgentDB is fine. But understand it's essentially a well-designed SQLite database with embeddings, not a cutting-edge AI research platform.
+If you need a simple, local memory system for agent experimentation with good Claude Code integration, AgentDB is fine. For distributed/production deployments, consider the **agentic-flow + Supabase** combination for real-time multi-agent coordination. But understand that the core is a well-designed SQLite/PostgreSQL database with embeddings, not a cutting-edge AI research platform.
+
+**Demo Site:** https://agentdb.ruv.io/ (minimal info beyond npm docs)
 
 ---
 
